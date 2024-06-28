@@ -1,0 +1,7 @@
+*.pyc
+data/
+docs/
+hansard_docs_2020s/
+sessions_by_sitting/
+sessions_consolidated_by_year/
+**.ipynb_checkpoints/**
