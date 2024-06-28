@@ -81,7 +81,7 @@ def prompt_model(question, answer):
 
 
 import json
-with open('written_question_answers.jsonl', 'r') as f:
+with open('data/written_question_answers.jsonl', 'r') as f:
     lines = f.readlines()
 json_lines = [json.loads(l) for l in lines]
 
@@ -89,7 +89,7 @@ json_lines = [json.loads(l) for l in lines]
 sample_lines = json_lines[14:]
 
 from tqdm.auto import tqdm
-with open('written_question_answers_processed.jsonl', 'a') as f:
+with open('data/written_question_answers_processed.jsonl', 'a') as f:
     for jl in tqdm(sample_lines):
         json_out = clean_json_output(prompt_model(question=jl['question'], answer=jl['answer']))
         try:

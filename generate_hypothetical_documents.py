@@ -34,7 +34,7 @@ def prompt_model(title, points):
     return model.invoke([message]).content
 
 
-with open('written_question_answers_processed.jsonl','r') as f:
+with open('data/written_question_answers_processed.jsonl','r') as f:
     lines = f.readlines()
     
 data = [json.loads(l) for l in lines]
@@ -56,7 +56,7 @@ print(row.points)
 print(row.question)
 print(prompt_model(title=row.title, points=row.points))
 
-with open('written_question_answers_hy_doc.jsonl', 'a') as f:
+with open('data/written_question_answers_hy_doc.jsonl', 'a') as f:
     for row in tqdm(df_answered.iterrows(), total=len(df_answered)):
         hy_doc = prompt_model(title=row.title, points=row.points)
         new_row_dict = {**row.to_dict(), 'hypothetical_document': hydoc}
