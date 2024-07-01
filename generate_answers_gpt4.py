@@ -20,17 +20,22 @@ model = AzureChatOpenAI(
 )
 
 
-prompt_template = """Imagine that you are a public servant writing a report for your boss.
-Write a report using the following points. Be as elaborate as possible. You can create your own story but it must be around these points and the title:
+prompt_template = """Imagine that you are a public servant drafting a reply for a parliamentary question.
+Write a reply given the following:
 
 Title: {title}
 
+Question: {question}
+
 Points: {points}
+
+
+Respond with only the reply.
 """
 
-def prompt_model(title, points):
+def prompt_model(title, points, question):
     message = HumanMessage(
-        content=prompt_template.format(title=title, points=points)
+        content=prompt_template.format(title=title, question=question, points=points)
     )
     return model.invoke([message]).content
 
@@ -43,8 +48,8 @@ data = [json.loads(l) for l in lines]
 df = pd.DataFrame(data)
 
 df_answered = df[df['status'] == 'answered']
-# df_answered['date'] = pd.to_datetime(df['filename'].apply(lambda x: x.split('_')[-1]))
-
+df_answered['date'] = pd.to_datetime(df['filename'].apply(lambda x: x.split('_')[-1]))
+df_answered_2024 = df_answered[df_answered.date.dt.year == 2024]
 
 # print(df_answered.groupby(df_answered.date.dt.year).size())
 
@@ -57,13 +62,14 @@ df_answered = df[df['status'] == 'answered']
 # print(row.question)
 # print(prompt_model(title=row.title, points=row.points))
 
-with open('data/written_question_answers_hy_doc.jsonl', 'a') as f:
-    for _, row in tqdm(df_answered.iterrows(), total=len(df_answered)):
+with open('data/gpt4_answers_by_points.jsonl', 'a') as f:
+    for _, row in tqdm(df_answered_2024.iterrows(), total=len(df_answered)):
         try:
-            hy_doc = prompt_model(title=row.title, points=row.points)
-        except Error as e:
+            answer = prompt_model(title=row.title, points=row.points, question=row.question)
+        except Exception as e:
             print(e)
             continue
             
-        new_row_dict = {**row.to_dict(), 'hypothetical_document': hy_doc}
+        new_row_dict = {**row.to_dict(), 'gpt4_answer_by_points': answer}
+        new_row_dict['date'] = str(new_row_dict['date'])
         f.write(json.dumps(new_row_dict) + '\n')
