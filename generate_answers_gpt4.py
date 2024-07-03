@@ -40,7 +40,7 @@ def prompt_model(title, points, question):
     return model.invoke([message]).content
 
 
-with open('data/written_question_answers_processed.jsonl','r') as f:
+with open('data/written_question_answers_hy_doc.jsonl','r') as f:
     lines = f.readlines()
     
 data = [json.loads(l) for l in lines]
@@ -62,14 +62,17 @@ df_answered_2024 = df_answered[df_answered.date.dt.year == 2024]
 # print(row.question)
 # print(prompt_model(title=row.title, points=row.points))
 
-with open('data/gpt4_answers_by_points.jsonl', 'a') as f:
-    for _, row in tqdm(df_answered_2024.iterrows(), total=len(df_answered)):
+# with open('data/gpt4_answers_by_points.jsonl', 'a') as f:
+with open('data/gpt4_answers_by_hy_doc.jsonl', 'a') as f:
+    for _, row in tqdm(df_answered_2024.iterrows(), total=len(df_answered_2024)):
         try:
-            answer = prompt_model(title=row.title, points=row.points, question=row.question)
+            # answer = prompt_model(title=row.title, points=row.points, question=row.question)
+            answer = prompt_model(title=row.title, points=row.hypothetical_document, question=row.question)
         except Exception as e:
             print(e)
             continue
             
-        new_row_dict = {**row.to_dict(), 'gpt4_answer_by_points': answer}
+        # new_row_dict = {**row.to_dict(), 'gpt4_answer_by_points': answer}
+        new_row_dict = {**row.to_dict(), 'gpt4_answer_by_hy_doc': answer}
         new_row_dict['date'] = str(new_row_dict['date'])
         f.write(json.dumps(new_row_dict) + '\n')
