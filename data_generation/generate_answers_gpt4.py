@@ -20,18 +20,7 @@ model = AzureChatOpenAI(
 )
 
 
-prompt_template = """Imagine that you are a public servant drafting a reply for a parliamentary question.
-Write a reply given the following:
-
-Title: {title}
-
-Question: {question}
-
-Points: {points}
-
-Respond with only the reply.
-
-Here is an example:
+one_shot_example = """Here is an example:
 
 Title: 
 
@@ -115,15 +104,39 @@ The analysis of fire incidents related to kitchen exhaust ducts in food and beve
 
 This report highlights the urgent need for improved maintenance practices and regulatory oversight to prevent future fire incidents in food and beverage establishments, ensuring a safer environment for all stakeholders involved.
 
-Answer:
+Reply:
 
 From 2018 to 2022, there were a total of 60 fires involving kitchen exhaust ducts in food and beverage establishments. The average duration between the fire incidents and when these ducts were last cleaned and maintained prior to the fire incidents is five months.
 
+##################################################################################################################
 """
 
-def prompt_model(title, points, question):
+prompt_template = """Imagine that you are a public servant drafting a reply for a parliamentary question.
+Given the following title, question, and points, write a reply to the question. 
+Respond with only the answer to the question.
+
+
+Title: 
+
+{title}
+
+Question: 
+
+{question}
+
+Points: 
+
+{points}
+
+######################################################################################################################
+
+{example}
+
+"""
+
+def prompt_model(title, points, question, one_shot=False):
     message = HumanMessage(
-        content=prompt_template.format(title=title, question=question, points=points)
+        content=prompt_template.format(title=title, question=question, points=points, example=one_shot_example if one_shot else "")
     )
     return model.invoke([message]).content
 
@@ -151,11 +164,12 @@ df_answered_2024 = df_answered[df_answered.date.dt.year == 2024]
 # print(prompt_model(title=row.title, points=row.points))
 
 # with open('data/gpt4_answers_by_points.jsonl', 'a') as f:
-with open('/home/watson_chua/efs/axolotl/data/input_data/data/gpt4_answers_by_hy_doc_concise.jsonl', 'a') as f:
+with open('/home/watson_chua/efs/axolotl/data/input_data/data/gpt4_answers_by_hy_doc_2.jsonl', 'a') as f:
     for _, row in tqdm(df_answered_2024.iterrows(), total=len(df_answered_2024)):
         try:
             # answer = prompt_model(title=row.title, points=row.points, question=row.question)
-            answer = prompt_model(title=row.title, points=row.hypothetical_document, question=row.question)
+            answer = prompt_model(title=row.title, points=row.hypothetical_document, question=row.question, one_shot=False)
+            print(answer)
         except Exception as e:
             print(e)
             continue
