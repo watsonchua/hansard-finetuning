@@ -12,7 +12,7 @@ model_kwargs = {"temperature": 0.01}
 claude_config = {
     "credentials_profile_name": "default",  # E.g "default"
     "region_name": "us-east-1",  # E.g. "us-east-1"
-    "model_id": "anthropic.claude-3-sonnet-20240229-v1:0",  # E.g "anthropic.claude-v2"
+    "model_id": "anthropic.claude-3-sonnet-20240229-v1:0", 
 }
 
 gpt_config = {
@@ -30,6 +30,9 @@ gemini_config = {
 
 class LLMHelper:
     def __init__(self, model_type):
+        if model_type not in ["gemini", "claude", "gpt"]:
+            raise ValueError("Model type must be one of \"gemini\", \"claude\", or \"gpt\" ")
+        
         self.model_type = model_type
 
         # use gemini without api key, login using gcloud auth application-default login
