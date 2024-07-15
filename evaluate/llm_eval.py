@@ -1,77 +1,13 @@
-from anthropic import AnthropicBedrock
 from tqdm.auto import tqdm
 import pandas as pd
+from llm_utils.prompts import prompt_three_way_comparison_template, prompt_two_way_comparison_template
+from llm_utils.llms import LLMHelper
 from fire import Fire
 
 
-prompt_three_way_template = """Given the following question, context, and three different answers a), b) and c), assess the answer based on the following criteria: 
- 1) factual correctness according to the context
- 2) similarity to model answer
- 3) conciseness
- 
-Respond in JSON whether answer a), b), or c) is the better answer and state your reason using the following schema:
-
-{{"winner": a, b, or c,
-"reason": reason it is the better answer}}
-
-Here is the information,
-
-{question}
-
-Context: {context}
-
-Model Answer: {ground_truth}
-
-Answer A: {answer_a}
-
-Answer B: {answer_b}
-
-Answer C: {answer_c}
-
-
-
-Respond with only the JSON reply and nothing else. Use double quotes for the json schema and DO NOT use any double quotes in the values.
-"""
-
-
-prompt_two_way_template = """Given the following question, context, and two different answers a) and b), assess the answer based on the following criteria: 
- 1) factual correctness according to the context
- 2) similarity to model answer
- 3) conciseness
- 
-Respond in JSON whether answer a) or b) is the better answer and state your reason using the following schema:
-
-{{"winner": a or b,
-"reason": reason it is the better answer}}
-
-Here is the information,
-
-{question}
-
-Context: {context}
-
-Model Answer: {ground_truth}
-
-Answer A: {answer_a}
-
-Answer B: {answer_b}
-
-Respond with only the JSON reply and nothing else. Use double quotes for the json schema and DO NOT use any double quotes in the values.
-"""
-
-client = AnthropicBedrock()
-
-def query_claude3(prompt):
-    message = client.messages.create(
-        model="anthropic.claude-3-sonnet-20240229-v1:0",
-        max_tokens=500,
-        messages=[{"role": "user", "content": prompt}]
-    )
-    return message.content[0].text
-
-
-
-def main(output_root_dir = '/home/watson_chua/efs/axolotl/data/evaluations/hansard/', subdir = 'gpt4_normal'):
+def main(model_type="claude", output_root_dir = '/home/watson_chua/efs/axolotl/data/evaluations/hansard/', subdir = 'gpt4_normal'):
+    llm_helper = LLMHelper(model_type=model_type)
+    
     df_all_predictions = pd.read_csv(output_root_dir + subdir + '/consolidated_predictions.csv')
 
 
@@ -91,17 +27,17 @@ def main(output_root_dir = '/home/watson_chua/efs/axolotl/data/evaluations/hansa
         gemma2_answer = row['gemma2_answer']
 
 
-        prompt_three_way = prompt_three_way_template.format(context=hypothetical_doc, ground_truth=ground_truth, question=question, answer_a=gpt_4_answer, answer_b=llama3_answer, answer_c=gemma2_answer)
-        prompt_gpt4_llama3 = prompt_two_way_template.format(context=hypothetical_doc, ground_truth=ground_truth, question=question, answer_a=gpt_4_answer, answer_b=llama3_answer)
-        prompt_gpt4_gemma2 = prompt_two_way_template.format(context=hypothetical_doc, ground_truth=ground_truth, question=question, answer_a=gpt_4_answer, answer_b=gemma2_answer)
-        prompt_llama3_gemma2 = prompt_two_way_template.format(context=hypothetical_doc, ground_truth=ground_truth, question=question, answer_a=llama3_answer, answer_b=gemma2_answer)
+        prompt_three_way = prompt_three_way_comparison_template.format(context=hypothetical_doc, ground_truth=ground_truth, question=question, answer_a=gpt_4_answer, answer_b=llama3_answer, answer_c=gemma2_answer)
+        prompt_gpt4_llama3 = prompt_two_way_comparison_template.format(context=hypothetical_doc, ground_truth=ground_truth, question=question, answer_a=gpt_4_answer, answer_b=llama3_answer)
+        prompt_gpt4_gemma2 = prompt_two_way_comparison_template.format(context=hypothetical_doc, ground_truth=ground_truth, question=question, answer_a=gpt_4_answer, answer_b=gemma2_answer)
+        prompt_llama3_gemma2 = prompt_two_way_comparison_template.format(context=hypothetical_doc, ground_truth=ground_truth, question=question, answer_a=llama3_answer, answer_b=gemma2_answer)
 
 
         try:
-            response_three_way = query_claude3(prompt_three_way)
-            response_gpt4_llama3 = query_claude3(prompt_gpt4_llama3)
-            response_gpt4_gemma2 = query_claude3(prompt_gpt4_gemma2)
-            response_llama3_gemma2 = query_claude3(prompt_llama3_gemma2)
+            response_three_way = llm_helper.generate(prompt_three_way)
+            response_gpt4_llama3 = llm_helper.generate(prompt_gpt4_llama3)
+            response_gpt4_gemma2 = llm_helper.generate(prompt_gpt4_gemma2)
+            response_llama3_gemma2 = llm_helper.generate(prompt_llama3_gemma2)
 
 
         except ValueError as e:
@@ -109,26 +45,26 @@ def main(output_root_dir = '/home/watson_chua/efs/axolotl/data/evaluations/hansa
             continue
         
         
-        three_way_evaluation_results_claude.append({'claude_evaluation': response_three_way, **row, 'llama3_answer': llama3_answer, 'gemma2_answer': gemma2_answer})
-        gpt4_llama3_evaluation_results_claude.append({'claude_evaluation': response_gpt4_llama3, **row, 'llama3_answer': llama3_answer})
-        gpt4_gemma2_evaluation_results_claude.append({'claude_evaluation': response_gpt4_gemma2, **row, 'gemma2_answer': gemma2_answer})
-        llama3_gemma2_evaluation_results_claude.append({'claude_evaluation': response_llama3_gemma2, **row, 'llama3_answer': llama3_answer, 'gemma2_answer': gemma2_answer})
+        three_way_evaluation_results_claude.append({'evaluation': response_three_way, **row, 'llama3_answer': llama3_answer, 'gemma2_answer': gemma2_answer})
+        gpt4_llama3_evaluation_results_claude.append({'evaluation': response_gpt4_llama3, **row, 'llama3_answer': llama3_answer})
+        gpt4_gemma2_evaluation_results_claude.append({'evaluation': response_gpt4_gemma2, **row, 'gemma2_answer': gemma2_answer})
+        llama3_gemma2_evaluation_results_claude.append({'evaluation': response_llama3_gemma2, **row, 'llama3_answer': llama3_answer, 'gemma2_answer': gemma2_answer})
 
 
         import json
-        with open(output_root_dir + subdir + '/gpt4_llama3_gemma2_evaluation_claude.jsonl', 'w') as f:
+        with open(output_root_dir + subdir + '/gpt4_llama3_gemma2_evaluation_{model_type}.jsonl', 'w') as f:
             for l in three_way_evaluation_results_claude:
                 f.write(json.dumps(l) + '\n')  
 
-        with open(output_root_dir + subdir + '/gpt4_llama3_evaluation_claude.jsonl', 'w') as f:
+        with open(output_root_dir + subdir + '/gpt4_llama3_evaluation_{model_type}.jsonl', 'w') as f:
             for l in gpt4_llama3_evaluation_results_claude:
                 f.write(json.dumps(l) + '\n')  
 
-        with open(output_root_dir + subdir + '/gpt4_gemma2_evaluation_claude.jsonl', 'w') as f:
+        with open(output_root_dir + subdir + '/gpt4_gemma2_evaluation_{model_type}.jsonl', 'w') as f:
             for l in gpt4_gemma2_evaluation_results_claude:
                 f.write(json.dumps(l) + '\n')  
 
-        with open(output_root_dir + subdir + '/llama3_gemma2_evaluation_claude.jsonl', 'w') as f:
+        with open(output_root_dir + subdir + '/llama3_gemma2_evaluation_{model_type}.jsonl', 'w') as f:
             for l in llama3_gemma2_evaluation_results_claude:
                 f.write(json.dumps(l) + '\n')  
 
