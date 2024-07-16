@@ -1,6 +1,6 @@
 import pandas as pd
 import json
-from llm_utils.prompts import prompt_three_way_comparison_template, prompt_two_way_comparison_template
+from llm_utils.prompts import three_way_comparison_prompt_template, two_way_comparison_prompt_template
 from llm_utils.llms import LLMHelper
 from fire import Fire
 from tqdm.auto import tqdm
@@ -26,9 +26,9 @@ def main(eval_llm_type="claude", output_dir="/home/watson_chua/efs/axolotl/data/
 
 
         if answer_key_3 is not None:
-            prompt = prompt_three_way_comparison_template.format(context=hypothetical_doc, ground_truth=ground_truth, question=question, answer_a=row[answer_key_1], answer_b=row[answer_key_2], answer_c=row[answer_key_3])
+            prompt = three_way_comparison_prompt_template.format(context=hypothetical_doc, ground_truth=ground_truth, question=question, answer_a=row[answer_key_1], answer_b=row[answer_key_2], answer_c=row[answer_key_3])
         else:
-            prompt = prompt_two_way_comparison_template.format(context=hypothetical_doc, ground_truth=ground_truth, question=question, answer_a=row[answer_key_1], answer_b=row[answer_key_2])
+            prompt = two_way_comparison_prompt_template.format(context=hypothetical_doc, ground_truth=ground_truth, question=question, answer_a=row[answer_key_1], answer_b=row[answer_key_2])
 
         try:
             response = llm_helper.generate(prompt)

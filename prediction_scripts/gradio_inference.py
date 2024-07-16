@@ -35,5 +35,5 @@ def main(api_path, input_path, output_path):
     
 
 if __name__ == "__main__":
-    main(api_path="https://9c98ab1856a6fd2bc5.gradio.live/", input_path="/root/data/input_data/hansard/reply_by_hyd_alpaca_formatted_test.jsonl", output_path="/root/data/predictions/hansard/llama3_8b_lora_alpaca.jsonl")
+    main(api_path="https://326e6bfc4e80449365.gradio.live/", input_path="/raid/watson/input_data/hansard/reply_by_hyd_alpaca_formatted_test.jsonl", output_path="/raid/watson/predictions/hansard/llama3_8b_lora_alpaca.jsonl")
     #Fire(main)

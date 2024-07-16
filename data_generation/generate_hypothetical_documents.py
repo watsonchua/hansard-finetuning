@@ -1,69 +1,38 @@
 import pandas as pd
 import json
-import os
-from langchain_core.messages import HumanMessage
-from langchain_openai import AzureChatOpenAI
 from tqdm.auto import tqdm
-
-# os.environ["AZURE_OPENAI_API_KEY"]
-os.environ["AZURE_OPENAI_ENDPOINT"] = "https://ai-capdev-oai-eastus-gcc2.openai.azure.com/"
-os.environ["AZURE_OPENAI_API_VERSION"] = "2024-05-01-preview"
-os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT_NAME"] = "gpt-4o"
-
+from llm_utils.prompts import hypothetical_report_from_points_prompt_template
+from llm_utils.llms import LLMHelper
+from pathlib import Path
+from fire import Fire
 
 
+def main(model_type="gpt4", input_file_path='/home/watson_chua/efs/hansard_finetuning/data/input_data/written_question_answers_processed.jsonl', output_file_path='/home/watson_chua/efs/hansard_finetuning/data/input_data/written_question_answers_hy_doc.jsonl'):
+    input_path = Path(input_file_path)
+    output_path = Path(output_file_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
 
+    with input_path.open('r') as f:
+        lines = f.readlines()
+        
+    data = [json.loads(l) for l in lines]
 
-model = AzureChatOpenAI(
-    openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
-    azure_deployment=os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT_NAME"],
-)
+    df = pd.DataFrame(data)
+    df_answered = df[df['status'] == 'answered']
 
+    llm_helper = LLMHelper(model_type=model_type)
 
-prompt_template = """Imagine that you are a public servant writing a report for your boss.
-Write a report using the following points. Be as elaborate as possible. You can create your own story but it must be around these points and the title:
+    with output_path.open('a') as f:
+        for _, row in tqdm(df_answered.iterrows(), total=len(df_answered)):
+            try:
+                prompt = hypothetical_report_from_points_prompt_template.format(title=row.title, points=row.points)
+                hy_doc = llm_helper.generate(prompt)
+            except Error as e:
+                print(e)
+                continue
+                
+            new_row_dict = {**row.to_dict(), 'hypothetical_document': hy_doc}
+            f.write(json.dumps(new_row_dict) + '\n')
 
-Title: {title}
-
-Points: {points}
-"""
-
-def prompt_model(title, points):
-    message = HumanMessage(
-        content=prompt_template.format(title=title, points=points)
-    )
-    return model.invoke([message]).content
-
-
-with open('data/written_question_answers_processed.jsonl','r') as f:
-    lines = f.readlines()
-    
-data = [json.loads(l) for l in lines]
-
-df = pd.DataFrame(data)
-
-df_answered = df[df['status'] == 'answered']
-# df_answered['date'] = pd.to_datetime(df['filename'].apply(lambda x: x.split('_')[-1]))
-
-
-# print(df_answered.groupby(df_answered.date.dt.year).size())
-
-
-# row = df_answered.iloc[0]
-
-
-# print(row.title)
-# print(row.points)
-# print(row.question)
-# print(prompt_model(title=row.title, points=row.points))
-
-with open('data/written_question_answers_hy_doc.jsonl', 'a') as f:
-    for _, row in tqdm(df_answered.iterrows(), total=len(df_answered)):
-        try:
-            hy_doc = prompt_model(title=row.title, points=row.points)
-        except Error as e:
-            print(e)
-            continue
-            
-        new_row_dict = {**row.to_dict(), 'hypothetical_document': hy_doc}
-        f.write(json.dumps(new_row_dict) + '\n')
+if __name__ == "__main__":
+    Fire(main)
