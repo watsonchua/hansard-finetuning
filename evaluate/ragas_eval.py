@@ -1,12 +1,10 @@
-from langchain_aws.chat_models import ChatBedrock
-from langchain_aws.embeddings import BedrockEmbeddings
+import pandas as pd
 from datasets import Dataset
 from ragas import evaluate
-import pandas as pd
 from fire import Fire
-# import nest_asyncio
-# nest_asyncio.apply()
-
+from llm_utils.llms import LLMHelper, EmbeddingsHelper
+from pathlib import Path
+# from ragas.metrics.critique import harmfulness
 from ragas.metrics import (
     faithfulness,
     answer_relevancy,
@@ -15,9 +13,8 @@ from ragas.metrics import (
     answer_similarity,
     answer_correctness,
 )
-# from ragas.metrics.critique import harmfulness
 
-# list of metrics we're going to use
+# list of metrics we"re going to use
 metrics = [
     faithfulness,
     # context_precision,
@@ -37,69 +34,31 @@ def create_dataset(df_eval, answer_key):
     return ds
 
 
-def main(output_root_dir='/home/watson_chua/efs/axolotl/data/evaluations/hansard/', subdir='gpt4_normal'):
+def main(eval_llm_type="claude", output_dir="/home/watson_chua/efs/axolotl/data/evaluations/hansard/gpt4_normal", input_file_name="/home/watson_chua/efs/axolotl/data/evaluations/hansard/gpt4_normal/consolidated_predictions.csv", answer_key="gpt4_answer_by_hy_doc", sample_size=None, output_file_prefix="gpt4_zero_shot"):
+    df_all_predictions = pd.read_csv(input_file_name)
+    
+    if sample_size is not None:
+        df_all_predictions = df_all_predictions.iloc[:sample_size]
 
-    df_all_predictions = pd.read_csv(output_root_dir + subdir + '/consolidated_predictions.csv')
-    # dataset_gpt4 = create_dataset(df_all_predictions, "gpt4_answer_by_hy_doc")
-    dataset_llama3 = create_dataset(df_all_predictions, "llama3_answer")
-    dataset_gemma2 = create_dataset(df_all_predictions, "gemma2_answer")
+    eval_dataset = create_dataset(df_all_predictions, answer_key)
 
-    config = {
-        "credentials_profile_name": "default",  # E.g "default"
-        "region_name": "us-east-1",  # E.g. "us-east-1"
-        "model_id": "anthropic.claude-3-sonnet-20240229-v1:0",  # E.g "anthropic.claude-v2"
-        "model_kwargs": {"temperature": 0.01},
-    }
+    llm_helper = LLMHelper(model_type=eval_llm_type)
+    embeddings_helper = EmbeddingsHelper(model_type=eval_llm_type)
 
-    bedrock_model = ChatBedrock(
-        credentials_profile_name=config["credentials_profile_name"],
-        region_name=config["region_name"],
-        endpoint_url=f"https://bedrock-runtime.{config['region_name']}.amazonaws.com",
-        model_id=config["model_id"],
-        model_kwargs=config["model_kwargs"],
-    )
+    model = llm_helper.model
+    embeddings = embeddings_helper.embeddings
 
-    # init the embeddings
-    bedrock_embeddings = BedrockEmbeddings(
-        credentials_profile_name=config["credentials_profile_name"],
-        region_name=config["region_name"],
-        model_id="cohere.embed-english-v3",
-        endpoint_url=f"https://bedrock-runtime.{config['region_name']}.amazonaws.com",
-    )
-
-
-
-
-    # gpt4_result = evaluate(
-    #     dataset_gpt4,
-    #     metrics=metrics,
-    #     llm=bedrock_model,
-    #     embeddings=bedrock_embeddings,
-    #     raise_exceptions=False
-    # )
-
-
-    llama3_result = evaluate(
-        dataset_llama3,
+    eval_result = evaluate(
+        eval_dataset,
         metrics=metrics,
-        llm=bedrock_model,
-        embeddings=bedrock_embeddings,
+        llm=model,
+        embeddings=embeddings,
         raise_exceptions=False
     )
 
-
-    gemma2_result = evaluate(
-        dataset_gemma2,
-        metrics=metrics,
-        llm=bedrock_model,
-        embeddings=bedrock_embeddings,
-        raise_exceptions=False
-    )
-
-    # gpt4_result.to_pandas().to_csv(output_root_dir + subdir + '/gpt4_ragas_claude.csv', index=False)
-    llama3_result.to_pandas().to_csv(output_root_dir + subdir + '/llama3_ragas_claude.csv', index=False)
-    gemma2_result.to_pandas().to_csv(output_root_dir + subdir + '/gemma2_ragas_claude.csv', index=False)
-
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+    eval_result.to_pandas().to_csv(output_path / Path(f"{output_file_prefix}_ragas_{eval_llm_type}.csv"), index=False)
 
 if __name__ == "__main__":
     Fire(main)
