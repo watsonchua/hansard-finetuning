@@ -1,0 +1,11 @@
+fire==0.6.0
+tqdm==4.65.0
+pandas==2.1.1
+ragas==0.1.10
+vertexai==1.49.0
+langchain==0.2.7
+langchain-aws==0.1.9
+langchain-community==0.2.7
+langchain-core==0.2.12
+langchain-openai==0.1.14
+
