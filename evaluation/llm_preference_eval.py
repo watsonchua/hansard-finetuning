@@ -7,7 +7,7 @@ from tqdm.auto import tqdm
 from pathlib import Path
 
 
-def main(eval_llm_type="claude", output_dir="/home/watson_chua/efs/axolotl/data/evaluations/hansard/gpt4_normal", input_file_name="/home/watson_chua/efs/axolotl/data/evaluations/hansard/gpt4_normal/consolidated_predictions.csv", answer_key_1="gpt4_answer_by_hy_doc", answer_key_2="llama3_answer", answer_key_3=None, sample_size=None, output_file_prefix="gpt4_zero_shot_llama3"):
+def main(input_file_name, output_dir, eval_llm_type="gemini", answer_key_1="gpt4_answer_by_hy_doc", answer_key_2="llama3_answer", answer_key_3=None, sample_size=None, output_file_prefix="gpt4_zero_shot_llama3"):
     llm_helper = LLMHelper(model_type=eval_llm_type)    
     df_all_predictions = pd.read_csv(input_file_name)
     if sample_size is not None:
