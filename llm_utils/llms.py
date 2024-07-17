@@ -4,8 +4,6 @@ from langchain_aws.chat_models import ChatBedrock
 from langchain_aws.embeddings import BedrockEmbeddings
 from vertexai.generative_models import GenerativeModel
 import vertexai
-import os
-from typing import List, Union
 
 model_kwargs = {"temperature": 0.01}
 
