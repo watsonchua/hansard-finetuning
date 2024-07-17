@@ -7,7 +7,7 @@ from llm_utils.llms import LLMHelper
 
 from fire import Fire
 
-def main(model_type="gpt4", one_shot=False, input_file_path="/home/watson_chua/efs/axolotl/data/input_data/data/hansard_answered_questions_text.csv", output_file_path="/home/watson_chua/efs/axolotl/data/input_data/data/gpt4_answers_by_hy_doc.jsonl"):
+def main(input_file_path, output_file_path, model_type="gpt4", one_shot=False):
     llm_helper = LLMHelper(model_type=model_type)
 
     df_test = pd.read_csv(input_file_path)
