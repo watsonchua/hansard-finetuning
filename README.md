@@ -32,6 +32,7 @@ The set-up consists of the following stages, as shown in the diagram below:
     4. **hansard_answered_questions_llama3_formatted_test.jsonl** : Test data formatted for finetuning
     5. **hansard_answered_questions_llama3_formatted_test_no_response.jsonl** : Test data formatted for finetuning, with no response (to be used for fine-tuned models prompt completion)
 
+The processes can also be executed by running `data_generation/generate_data.sh`.
 
 ## Fine-tuning and Inference
 1. **Fine-tune LLMs**: Fine-tune models using [axolotl](https://github.com/axolotl-ai-cloud/axolotl/tree/main?tab=readme-ov-file#train) with the prompt-formatted train and test files from Step 4 above. These are the config files I used for [Llama-3-8B](https://github.com/watsonchua/axolotl/blob/main/configs/llama-3/lora-8b.yml) and [Gemma-2-9B](https://github.com/watsonchua/axolotl/blob/main/configs/gemma2/lora.yml).

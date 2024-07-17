@@ -1,0 +1,9 @@
+written_question_answer_fp="/home/watson_chua/efs/hansard_finetuning/data/input_data/written_question_answers.jsonl"
+written_question_answer_classified_fp="/home/watson_chua/efs/hansard_finetuning/data/input_data/written_question_answers_processed.jsonl"
+written_question_answer_with_hyd_fp="/home/watson_chua/efs/hansard_finetuning/data/input_data/written_question_answers_hy_doc.jsonl"
+train_test_split_save_dir_path="/home/watson_chua/efs/hansard_finetuning/data/input_data/"
+model_type="gpt4"
+
+python classify_parliamentary_questions.py --input_file_path $written_question_answer_fp --output_file_path $written_question_answer_classified_fp
+python generate_hypothetical_documents.py --model_type $model_type --input_file_path $written_question_answer_classified_fp --output_file_path $written_question_answer_with_hyd_fp
+python train_test_split_format.py --input_file_path $written_question_answer_with_hyd_fp --output_dir_path $train_test_split_save_dir_path

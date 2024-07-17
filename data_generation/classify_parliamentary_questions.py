@@ -8,7 +8,7 @@ from fire import Fire
 from tqdm.auto import tqdm
 
 
-def main(model_type="gpt4", input_file_path="/home/watson_chua/efs/hansard_finetuning/data/input_data/written_question_answers.jsonl", output_file_path="/home/watson_chua/efs/hansard_finetuning/data/input_data/written_question_answers_processed.jsonl"):
+def main(input_file_path, output_file_path, model_type="gpt4"):
     input_path = Path(input_file_path)
     output_path = Path(output_file_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
