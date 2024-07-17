@@ -11,9 +11,9 @@ Steps:
     - `filename`: Reference to date of sitting in the format `sitting_YYYY-MM-DD`
 
     E.g.
-    ```
+    <code>
     {"title": "Proportion of Public Service Agencies that Provide Unpaid Leave for Parents with Multiple or Pre-term Babies", "question": "Mr Louis Ng Kok Kwang asked the Prime Minister (a) what is the number and percentage of public service agencies that provide unpaid leave for parents with multiple or pre-term babies; (b) what is the take-up rate of such leave for each year in the past five years; and (c) if data on the take-up rate has not been collected, whether the Prime Minister's Office will start collecting this data. ", "answer": "In the past five years, an average of 25 officers in the Civil Service utilised this leave provision each year.", "filename": "sitting_2023-02-22"}
-    ```
+    </code>
 
 3. Run `python data_generation/classify_parliamentary_questions.py --model_type "gpt4" --input_file_path <path_to_input_file> --output_file_path <path_to_save_classified_file>` to generate a file with status of whether question is answered, and summary points of answers. Output will be stored in `<path_to_save_classified_file>` (e.g. `written_question_answers_processed.jsonl`)
 
