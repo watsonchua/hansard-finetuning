@@ -7,7 +7,7 @@ The set-up consists of the following stages, as shown in the diagram below:
 - Fine-tuning
 - Evaluation
 
-![Overall Workflow](image.png)
+![Overall Workflow](overall.png)
 
 ## Data Collection and Preprocessing
 1. **Consolidating written question and answers from Hansard**: Crawl Hansard data for written question and answers (code not in this repo). Store the results in a jsonl file (e.g. `written_question_answers.jsonl`) with each row having these fields:
