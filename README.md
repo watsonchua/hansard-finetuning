@@ -1,5 +1,6 @@
 # Finetuning LLMs to Draft Parliamentary Responses
 
+![Overall Workflow](image.png)
 
 ## Data Generation
 Steps:
