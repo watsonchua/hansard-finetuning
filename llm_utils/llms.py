@@ -22,7 +22,7 @@ gpt_config = {
     "model_endpoint": "https://ai-capdev-oai-eastus-gcc2.openai.azure.com/",
     "api_version": "2024-05-01-preview",
     "model_id": "gpt-4o",
-    "embedding_model_id": "cohere.embed-english-v3",
+    "embedding_model_id": "text-embedding-3-large",
 }
 
 gemini_config = {
@@ -47,8 +47,6 @@ class LLMHelper:
 
         elif model_type == "gpt":
             # To pass "AZURE_OPENAI_API_KEY" as an environment parameter when using
-
-            # os.environ["AZURE_OPENAI_ENDPOINT"] = gpt_config["model_endpoint"]
             
             self.model = AzureChatOpenAI(
                 azure_endpoint=gpt_config["model_endpoint"],
